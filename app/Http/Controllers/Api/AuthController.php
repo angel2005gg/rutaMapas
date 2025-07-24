@@ -69,9 +69,28 @@ class AuthController extends Controller
 
     public function getUser(Request $request)
     {
-        return response()->json([
-            'status' => 'success',
-            'user' => $request->user()->load(['clasificacion', 'rutasGuardadas', 'comunidades'])
-        ]);
+        try {
+            $user = $request->user();
+            
+            return response()->json([
+                'status' => 'success',
+                'user' => [
+                    'id' => $user->id,
+                    'nombre' => $user->nombre,
+                    'correo' => $user->correo,
+                    'foto_perfil' => $user->foto_perfil,
+                    'racha_actual' => (int)($user->racha_actual ?? 0), // Asegurar que sea int
+                    'clasificacion_id' => $user->clasificacion_id ? (int)$user->clasificacion_id : 0, // Convertir null a 0
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at
+                ]
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No se pudo obtener el usuario'
+            ], 500);
+        }
     }
 }
