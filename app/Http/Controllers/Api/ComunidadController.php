@@ -200,9 +200,9 @@ class ComunidadController extends Controller
                 ], 403);
             }
 
-            // Obtener ranking de usuarios (ordenados por racha_actual)
+            // Obtener ranking de usuarios (ordenados por puntaje)
             $ranking = $comunidad->usuarios()
-                                ->orderBy('racha_actual', 'desc')
+                                ->orderBy('puntaje', 'desc')
                                 ->orderBy('nombre', 'asc')
                                 ->get()
                                 ->map(function ($user, $index) {
@@ -211,8 +211,8 @@ class ComunidadController extends Controller
                                         'id' => $user->id,
                                         'nombre' => $user->nombre,
                                         'foto_perfil' => $user->foto_perfil,
-                                        'racha_actual' => (int)$user->racha_actual,
-                                        'puntos' => (int)$user->racha_actual, // Por ahora usamos racha como puntos
+                                        'racha_actual' => (int)($user->racha_actual ?? 0),
+                                        'puntaje' => (int)($user->puntaje ?? 0), // ← USAR CAMPO PUNTAJE
                                     ];
                                 });
 

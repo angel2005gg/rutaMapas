@@ -19,6 +19,7 @@ class Usuario extends Authenticatable
         'foto_perfil',
         'google_uid',
         'racha_actual',
+        'puntaje', // ← AGREGAR ESTA LÍNEA
         'clasificacion_id'
     ];
 

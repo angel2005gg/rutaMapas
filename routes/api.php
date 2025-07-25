@@ -19,4 +19,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('usuarios', UsuarioController::class);
     Route::apiResource('rutas', RutaController::class);
     Route::apiResource('comunidades', ComunidadController::class);
+
+    // Rutas de comunidades ✅ AGREGAR ESTAS LÍNEAS
+    Route::prefix('comunidades')->group(function () {
+        Route::post('/crear', [ComunidadController::class, 'crearComunidad']);
+        Route::post('/unirse', [ComunidadController::class, 'unirseAComunidad']);
+        Route::get('/mis-comunidades', [ComunidadController::class, 'misComunidades']);
+        Route::get('/{id}', [ComunidadController::class, 'detallesComunidad']);
+        Route::delete('/{id}/salir', [ComunidadController::class, 'salirDeComunidad']);
+    });
 });
