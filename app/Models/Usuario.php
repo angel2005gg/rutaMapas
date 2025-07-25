@@ -15,6 +15,7 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'nombre',
         'correo',
+        'password', // Agregar esto
         'foto_perfil',
         'google_uid',
         'racha_actual',
@@ -22,8 +23,13 @@ class Usuario extends Authenticatable
     ];
 
     protected $hidden = [
+        'password', // Agregar esto
         'google_uid',
         'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
     ];
 
     public function clasificacion()

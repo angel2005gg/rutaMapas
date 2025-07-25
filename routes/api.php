@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\RutaController;
 use App\Http\Controllers\Api\ComunidadController;
 use Illuminate\Support\Facades\Route;
 
-// Ruta pública para login con Google
+// Rutas públicas
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
+Route::post('/auth/login', [AuthController::class, 'login']);                    // ← AGREGAR ESTA
+Route::post('/auth/send-code', [AuthController::class, 'sendVerificationCode']);
+Route::post('/auth/verify-code', [AuthController::class, 'verifyCodeAndLogin']);    // ← Nueva
 
 // Rutas protegidas que requieren autenticación
 Route::middleware('auth:sanctum')->group(function () {
