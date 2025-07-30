@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Comunidad;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -138,14 +139,43 @@ class ComunidadController extends Controller
     }
 
     /**
-     * Obtener todas las comunidades del usuario
+     * Obtener todas las comunidades del usuario con información completa
      */
     public function misComunidades(Request $request)
     {
         try {
             $usuario = $request->user();
+            
+            if (!$usuario) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
 
-            $comunidades = $usuario->comunidades()->with('creador')->get()->map(function ($comunidad) use ($usuario) {
+            // Obtener comunidades con relaciones - ASEGURAR que creador existe
+            $comunidades = $usuario->comunidades()
+                                  ->with(['creador', 'usuarios'])
+                                  ->whereHas('creador')
+                                  ->get();
+            
+            $comunidadesData = $comunidades->map(function ($comunidad) use ($usuario) {
+                // Obtener ranking de usuarios ordenado por puntaje
+                $usuariosRanking = $comunidad->usuarios()
+                                            ->orderBy('puntaje', 'desc')
+                                            ->orderBy('nombre', 'asc')
+                                            ->get()
+                                            ->map(function ($user, $index) {
+                                                return [
+                                                    'posicion' => $index + 1,
+                                                    'id' => $user->id,
+                                                    'nombre' => $user->nombre,
+                                                    'foto_perfil' => $user->foto_perfil,
+                                                    'racha_actual' => (int)($user->racha_actual ?? 0),
+                                                    'puntaje' => (int)($user->puntaje ?? 0),
+                                                ];
+                                            });
+
                 return [
                     'id' => $comunidad->id,
                     'nombre' => $comunidad->nombre,
@@ -154,19 +184,28 @@ class ComunidadController extends Controller
                     'creador' => [
                         'id' => $comunidad->creador->id,
                         'nombre' => $comunidad->creador->nombre,
+                        'foto_perfil' => $comunidad->creador->foto_perfil,
                     ],
                     'total_miembros' => $comunidad->usuarios()->count(),
                     'es_creador' => $comunidad->creador_id === $usuario->id,
+                    'usuarios' => $usuariosRanking,
                     'created_at' => $comunidad->created_at,
                 ];
             });
 
             return response()->json([
                 'status' => 'success',
-                'comunidades' => $comunidades
+                'comunidades' => $comunidadesData
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Error en misComunidades:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error al obtener comunidades',
@@ -212,7 +251,7 @@ class ComunidadController extends Controller
                                         'nombre' => $user->nombre,
                                         'foto_perfil' => $user->foto_perfil,
                                         'racha_actual' => (int)($user->racha_actual ?? 0),
-                                        'puntaje' => (int)($user->puntaje ?? 0), // ← USAR CAMPO PUNTAJE
+                                        'puntaje' => (int)($user->puntaje ?? 0),
                                     ];
                                 });
 
@@ -289,6 +328,50 @@ class ComunidadController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error al salir de la comunidad',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar comunidad (solo el creador puede hacerlo)
+     */
+    public function eliminarComunidad(Request $request, $id)
+    {
+        try {
+            $usuario = $request->user();
+            $comunidad = Comunidad::find($id);
+
+            if (!$comunidad) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Comunidad no encontrada'
+                ], 404);
+            }
+
+            // Solo el creador puede eliminar la comunidad
+            if ($comunidad->creador_id !== $usuario->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Solo el creador puede eliminar la comunidad'
+                ], 403);
+            }
+
+            // Eliminar todas las relaciones usuario-comunidad
+            $comunidad->usuarios()->detach();
+            
+            // Eliminar la comunidad
+            $comunidad->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Comunidad eliminada exitosamente'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al eliminar comunidad',
                 'error' => $e->getMessage()
             ], 500);
         }

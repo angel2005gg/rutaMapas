@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('foto_perfil')->nullable();
             $table->string('google_uid', 255)->nullable()->unique();
             $table->integer('racha_actual')->default(0);
+            $table->integer('puntaje')->default(0); // ← AGREGAR ESTA LÍNEA
             $table->foreignId('clasificacion_id')->nullable()
                   ->constrained('clasificaciones')
                   ->nullOnDelete();
