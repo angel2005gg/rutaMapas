@@ -52,4 +52,14 @@ class Usuario extends Authenticatable
     {
         return $this->belongsToMany(Comunidad::class, 'usuario_comunidad');
     }
+
+    public function competenciaPuntos()
+    {
+        return $this->hasMany(CompetenciaPunto::class);
+    }
+
+    public function competenciasParticipadas()
+    {
+        return $this->belongsToMany(Competencia::class, 'competencia_puntos');
+    }
 }

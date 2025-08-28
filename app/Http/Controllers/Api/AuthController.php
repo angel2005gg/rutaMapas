@@ -94,6 +94,7 @@ class AuthController extends Controller
                     'correo' => $user->correo,
                     'foto_perfil' => $user->foto_perfil, // ← Asegurar que pase la foto de Google
                     'google_uid' => $user->google_uid,   // ← Pasar el UID de Google
+                    'puntaje' => (int)($user->puntaje ?? 0), // ← incluir puntaje total
                     'racha_actual' => (int)($user->racha_actual ?? 0),
                     'clasificacion_id' => $user->clasificacion_id ? (int)$user->clasificacion_id : 0,
                     'created_at' => $user->created_at,

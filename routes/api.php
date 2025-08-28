@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\RutaController;
 use App\Http\Controllers\Api\ComunidadController;
 use App\Http\Controllers\Api\PuntajeController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CompetenciaController;
 
 // Rutas públicas
 Route::post('/auth/google', [AuthController::class, 'googleLogin']);
@@ -35,5 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ComunidadController::class, 'detallesComunidad']);
         Route::delete('/{id}/salir', [ComunidadController::class, 'salirDeComunidad']);
         Route::delete('/{id}/eliminar', [ComunidadController::class, 'eliminarComunidad']);
+
+        // Competencias dentro de comunidades
+        Route::post('/{id}/configurar-periodo', [CompetenciaController::class, 'configurarPeriodo']);
+        Route::patch('/{id}/competencia/editar', [CompetenciaController::class, 'editarCompetenciaActiva']);
+        Route::get('/{id}/ranking-actual', [CompetenciaController::class, 'rankingActual']);
+        Route::get('/{id}/historial', [CompetenciaController::class, 'historial']);
+        Route::post('/{id}/puntos', [PuntajeController::class, 'actualizarPuntosEnComunidad']);
     });
 });

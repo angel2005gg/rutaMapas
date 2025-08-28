@@ -24,4 +24,14 @@ class Comunidad extends Model
     {
         return $this->belongsToMany(Usuario::class, 'usuario_comunidad');
     }
+
+    public function competencias()
+    {
+        return $this->hasMany(Competencia::class);
+    }
+
+    public function competenciaActiva()
+    {
+        return $this->hasOne(Competencia::class)->where('estado', 'activa');
+    }
 }

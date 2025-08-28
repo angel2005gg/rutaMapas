@@ -8,6 +8,8 @@ use App\Models\Clasificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Comunidad;
+use App\Services\CompetenciaService;
 
 class PuntajeController extends Controller
 {
@@ -82,6 +84,29 @@ class PuntajeController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function actualizarPuntosEnComunidad(Request $request, CompetenciaService $service, $comunidadId)
+    {
+        $data = $request->validate([
+            'puntos' => 'required|integer',
+            'duracion_dias' => 'nullable|integer|min:1|max:365',
+            'motivo' => 'nullable|string|max:255',
+        ]);
+
+        $comunidad = Comunidad::findOrFail($comunidadId);
+
+        // Validar membresía del solicitante
+        if (!$request->user()->comunidades()->where('comunidad_id', $comunidad->id)->exists()) {
+            return response()->json(['message' => 'No pertenece a la comunidad'], 403);
+        }
+
+        $duracion = (int) ($data['duracion_dias'] ?? 7);
+
+        // Sumar al usuario autenticado; si se necesita otro usuario, se puede ampliar el payload
+        $service->sumarPuntos($request->user(), $comunidad, (int) $data['puntos'], $duracion, $data['motivo'] ?? null);
+
+        return response()->json(['message' => 'Puntos actualizados en la competencia activa']);
     }
 
     /**
