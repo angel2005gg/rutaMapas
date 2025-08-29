@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Comunidad;
 use App\Services\CompetenciaService;
+use App\Models\Competencia;
 
 class PuntajeController extends Controller
 {
@@ -107,6 +108,50 @@ class PuntajeController extends Controller
         $service->sumarPuntos($request->user(), $comunidad, (int) $data['puntos'], $duracion, $data['motivo'] ?? null);
 
         return response()->json(['message' => 'Puntos actualizados en la competencia activa']);
+    }
+
+    public function aplicarPuntosEnTodasMisComunidades(Request $request, CompetenciaService $service)
+    {
+        $data = $request->validate([
+            'puntos' => 'required|integer',
+            'motivo' => 'nullable|string|max:255',
+            'solo_si_activa' => 'sometimes|boolean',
+            'duracion_dias' => 'nullable|integer|min:1|max:365',
+        ]);
+
+        $usuario = $request->user();
+        $soloActiva = (bool)($data['solo_si_activa'] ?? true);
+        $duracion = (int) ($data['duracion_dias'] ?? 7);
+
+        $comunidades = $usuario->comunidades()->get();
+        $aplicadas = [];
+        $omitidas = [];
+
+        foreach ($comunidades as $comunidad) {
+            $activa = Competencia::where('comunidad_id', $comunidad->id)
+                ->activa()
+                ->where('fecha_fin', '>', now())
+                ->first();
+
+            if ($soloActiva && !$activa) {
+                $omitidas[] = $comunidad->id;
+                continue;
+            }
+
+            $durParaEsta = $activa ? (int) $activa->duracion_dias : $duracion;
+            $service->sumarPuntos($usuario, $comunidad, (int)$data['puntos'], $durParaEsta, $data['motivo'] ?? null);
+            $aplicadas[] = $comunidad->id;
+        }
+
+        return response()->json([
+            'message' => 'Puntos aplicados',
+            'data' => [
+                'puntos' => (int)$data['puntos'],
+                'solo_si_activa' => $soloActiva,
+                'comunidades_aplicadas' => $aplicadas,
+                'comunidades_omitidas' => $omitidas,
+            ]
+        ]);
     }
 
     /**

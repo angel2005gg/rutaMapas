@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/actualizar', [PuntajeController::class, 'actualizarPuntos']);
         Route::post('/racha', [PuntajeController::class, 'actualizarRacha']);
         Route::get('/estadisticas', [PuntajeController::class, 'obtenerEstadisticas']);
+        Route::post('/aplicar-todas', [PuntajeController::class, 'aplicarPuntosEnTodasMisComunidades']);
     });
 
     // ✅ RUTAS DE COMUNIDADES:
